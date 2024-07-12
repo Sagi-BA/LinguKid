@@ -82,9 +82,6 @@ def play_sound(file_path: str):
 def main():
     header_content, image_path, footer_content = initialize()    
 
-    # Initialize pygame mixer
-    # pygame.mixer.init()
-
     # Load sound effects
     correct_sound = "sounds/correct.mp3"
     incorrect_sound = "sounds/incorrect.mp3"
