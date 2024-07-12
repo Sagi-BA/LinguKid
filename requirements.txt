@@ -3,3 +3,4 @@ python-dotenv
 gtts
 groq
 pygame
+aiohttp
