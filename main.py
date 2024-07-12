@@ -68,20 +68,29 @@ if 'counted' not in st.session_state:
 # Initialize user count
 initialize_user_count()
 
-def play_sound(sound):
-    sound.play()
-    # Wait for the sound to finish playing
-    pygame.time.wait(int(sound.get_length() * 1000))
+def get_base64_audio(file_path):
+    with open(file_path, "rb") as audio_file:
+        return base64.b64encode(audio_file.read()).decode('utf-8')
+
+
+def play_sound(sound_file):
+    audio_base64 = get_base64_audio(sound_file)
+    audio_html = f"""
+        <audio autoplay>
+            <source src="data:audio/mpeg;base64,{audio_base64}" type="audio/mpeg">
+        </audio>
+    """
+    st.markdown(audio_html, unsafe_allow_html=True)
     
 def main():
     header_content, image_path, footer_content = initialize()    
 
     # Initialize pygame mixer
-    pygame.mixer.init()
+    # pygame.mixer.init()
 
     # Load sound effects
-    correct_sound = pygame.mixer.Sound("sounds/correct.mp3")
-    incorrect_sound = pygame.mixer.Sound("sounds/incorrect.mp3")
+    correct_sound_file = "sounds/correct.mp3"
+    incorrect_sound_file = "sounds/incorrect.mp3"
 
     # Initialize session state variables
     if 'age' not in st.session_state:
@@ -262,13 +271,13 @@ def main():
                             if option == st.session_state.current_word['hebrew']:
                                 st.session_state.score += 1
                                 st.success("נכון!")
-                                play_sound(correct_sound)
+                                play_sound(correct_sound_file)
                                 st.session_state.current_word = None
                                 st.rerun()
                             else:
                                 st.session_state.failures += 1
                                 st.error(f"לא נכון. לחץ על התשובה הנכונה כדי להמשיך.")
-                                play_sound(incorrect_sound)
+                                play_sound(incorrect_sound_file)
                                 st.session_state.timer_active = False
                                 st.session_state.waiting_for_next = True
                                 st.rerun()
