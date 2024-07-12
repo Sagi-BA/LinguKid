@@ -2,9 +2,11 @@ import asyncio
 import streamlit as st
 import random
 import time
-import base64
+import json
 from gtts import gTTS
 from io import BytesIO
+import base64
+import pygame
 
 from utils.init import initialize
 from utils.counter import initialize_user_count, increment_user_count, decrement_user_count, get_user_count
@@ -29,11 +31,8 @@ DIFFICULTY_LEVELS = {
 
 def start_over():
     for key in list(st.session_state.keys()):
-        if key not in ['counted', 'user_count', 'age', 'num_words', 'used_words']:
+        if key not in ['counted', 'user_count', 'age', 'num_words']:
             del st.session_state[key]
-    st.session_state.used_words = []
-    st.session_state.all_game_words = []
-    st.session_state.telegram_message_sent = False  # Reset the flag when starting over
 
 def text_to_speech(text):
     tts = gTTS(text=text, lang='en')
@@ -66,45 +65,20 @@ if 'counted' not in st.session_state:
 # Initialize user count
 initialize_user_count()
 
-def get_base64_audio(file_path):
-    with open(file_path, "rb") as audio_file:
-        return base64.b64encode(audio_file.read()).decode('utf-8')
-
-
-def load_audio_files():
-    correct_audio = get_base64_audio("sounds/correct.mp3")
-    incorrect_audio = get_base64_audio("sounds/incorrect.mp3")
-    
-    st.markdown(
-        f"""
-        <script>
-        var correctAudio = new Audio("data:audio/mp3;base64,{correct_audio}");
-        var incorrectAudio = new Audio("data:audio/mp3;base64,{incorrect_audio}");
-        
-        function playSound(sound) {{
-            if (sound === 'correct') {{
-                correctAudio.play();
-            }} else if (sound === 'incorrect') {{
-                incorrectAudio.play();
-            }}
-        }}
-        </script>
-        """,
-        unsafe_allow_html=True
-    )
-
 def play_sound(sound):
-    st.markdown(f'<script>playSound("{sound}");</script>', unsafe_allow_html=True)
+    sound.play()
+    # Wait for the sound to finish playing
+    pygame.time.wait(int(sound.get_length() * 1000))
     
 def main():
     header_content, image_path, footer_content = initialize()    
 
     # Initialize pygame mixer
-    # pygame.mixer.init()
+    pygame.mixer.init()
 
     # Load sound effects
-    correct_sound_file = "sounds/correct.mp3"
-    incorrect_sound_file = "sounds/incorrect.mp3"
+    correct_sound = pygame.mixer.Sound("sounds/correct.mp3")
+    incorrect_sound = pygame.mixer.Sound("sounds/incorrect.mp3")
 
     # Initialize session state variables
     if 'age' not in st.session_state:
@@ -177,9 +151,6 @@ def main():
                             st.session_state.num_words, 
                             st.session_state.used_words
                         )
-                        if not st.session_state.words:  # Check if the word list is empty
-                            raise ValueError("No words generated")
-                        
                         # Store only the English words
                         st.session_state.all_game_words = [word['english'] for word in st.session_state.words]
                         st.session_state.used_words.extend(st.session_state.all_game_words)
@@ -189,13 +160,11 @@ def main():
                         retry_count += 1
                         if retry_count < max_retries:
                             error_message = f"שגיאה בטעינת המילים. מנסה שוב בעוד {4 - retry_count} שניות..."
-                            st.warning(error_message)
-                            time.sleep(3)
+                            with st.spinner(error_message):
+                                time.sleep(3)
                         else:
-                            st.error("לא הצלחנו לטעון מילים. אנא נסה שוב מאוחר יותר או בחר גיל אחר.")
-                
-                if not st.session_state.words:
-                    st.error("לא הצלחנו ליצור מילים. אנא נסה שוב עם פרמטרים אחרים או מאוחר יותר.")
+                            st.error("לא הצלחנו לטעון מילים. אנא נסה שוב מאוחר יותר.")
+                            break
 
         if st.session_state.game_state == 'word_preview' and st.session_state.words:
             st.markdown("### מילים לתרגול:")
@@ -285,17 +254,15 @@ def main():
                             if option == st.session_state.current_word['hebrew']:
                                 st.session_state.score += 1
                                 st.success("נכון!")
-                                play_sound('correct')
+                                play_sound(correct_sound)
                                 st.session_state.current_word = None
-                                time.sleep(0.5)  # Short delay to allow sound to play
                                 st.rerun()
                             else:
                                 st.session_state.failures += 1
                                 st.error(f"לא נכון. לחץ על התשובה הנכונה כדי להמשיך.")
-                                play_sound('incorrect')
+                                play_sound(incorrect_sound)
                                 st.session_state.timer_active = False
                                 st.session_state.waiting_for_next = True
-                                time.sleep(0.5)  # Short delay to allow sound to play
                                 st.rerun()
                         else:
                             st.session_state.current_word = None
@@ -326,19 +293,14 @@ def main():
                 unsafe_allow_html=True
             )
             
-            # Check if the message has not been sent yet
-            if 'telegram_message_sent' not in st.session_state or not st.session_state.telegram_message_sent:
-                # Join the English words into a single string
-                word_list = ", ".join(st.session_state.all_game_words)
-                
-                asyncio.run(send_telegram_message(
-                    f"Final score: {st.session_state.score}, "
-                    f"Mistakes: {st.session_state.failures}, "
-                    f"The words are: {word_list}"
-                ))
-                
-                # Mark the message as sent
-                st.session_state.telegram_message_sent = True
+            # Join the English words into a single string
+            word_list = ", ".join(st.session_state.all_game_words)
+            
+            asyncio.run(send_telegram_message(
+                f"Final score: {st.session_state.score}, "
+                f"Mistakes: {st.session_state.failures}, "
+                f"The words are: {word_list}"
+            ))
 
             if st.button("שחק שוב", use_container_width=True):
                 start_over()
