@@ -144,7 +144,7 @@ def main():
             st.session_state.num_words = st.number_input("מספר מילים למשחק:", min_value=5, max_value=20, value=st.session_state.num_words, step=1, key="word_count_input")
 
     if st.session_state.game_state in ['start', 'word_preview']:
-        if st.button("צור מילים", use_container_width=True):
+        if st.button("יצירת מילים", use_container_width=True):
             word_generator = WordGenerator()
             retry_count = 0
             max_retries = 3
