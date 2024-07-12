@@ -81,7 +81,7 @@ async def main():
     sender = TelegramSender()
     try:
         if await sender.verify_bot_token():
-            await sender.send_message("Test message", "Test Title")
+            await sender.send_message("Test message", "LinguKid")
         else:
             print("Bot token verification failed")
     finally:

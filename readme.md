@@ -4,7 +4,7 @@
 
 Lingukid is an interactive English learning app designed for children
 
-> You can try the app [here](https://sagi-separate-the-voices-from-the-music-in-the-song.streamlit.app/)
+> You can try the app [here](https://sagi-linguakid.streamlit.app/)
 
 [![Linktree](https://img.shields.io/badge/linktree-white?style=for-the-badge&logo=linktree&logoColor=43E55E)](https://linktr.ee/sagib?lt_utm_source=lt_share_link#373198503) |
 [![Facebook](https://img.shields.io/badge/facebook-white?style=for-the-badge&logo=facebook&logoColor=0866FF)](https://www.facebook.com/sagi.baron) |

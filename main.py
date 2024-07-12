@@ -1,3 +1,4 @@
+import asyncio
 import streamlit as st
 import random
 import time
@@ -10,6 +11,7 @@ import pygame
 from utils.init import initialize
 from utils.counter import initialize_user_count, increment_user_count, decrement_user_count, get_user_count
 from utils.word_generator import WordGenerator
+from utils.TelegramSender import TelegramSender
 
 # צבעים מותאמים לילדים
 COLORS = {
@@ -29,8 +31,11 @@ DIFFICULTY_LEVELS = {
 
 def start_over():
     for key in list(st.session_state.keys()):
-        if key not in ['counted', 'user_count', 'age', 'num_words']:
+        if key not in ['counted', 'user_count', 'age', 'num_words', 'used_words']:
             del st.session_state[key]
+    st.session_state.used_words = []
+    st.session_state.all_game_words = []
+    st.session_state.telegram_message_sent = False  # Reset the flag when starting over
 
 def text_to_speech(text):
     tts = gTTS(text=text, lang='en')
@@ -50,7 +55,19 @@ def start_over():
         if key not in ['counted', 'user_count', 'age', 'num_words', 'used_words']:
             del st.session_state[key]
     st.session_state.used_words = []
-    
+
+# Initialize TelegramSender
+if 'telegram_sender' not in st.session_state:
+    st.session_state.telegram_sender = TelegramSender()
+
+# Increment user count if this is a new session
+if 'counted' not in st.session_state:
+    st.session_state.counted = True
+    increment_user_count()
+
+# Initialize user count
+initialize_user_count()
+
 def play_sound(sound):
     sound.play()
     # Wait for the sound to finish playing
@@ -115,13 +132,13 @@ def main():
     if image_path:
         st.image(image_path, use_column_width=True)
 
-    # Input section (always visible)
-    col1, col2 = st.columns(2)
-    with col1:
-        st.session_state.age = st.number_input("הכנס את גילך:", min_value=3, max_value=100, value=st.session_state.age, step=1, key="age_input")
+    if st.session_state.game_state in ['start', 'word_preview']:
+        col1, col2 = st.columns(2)
+        with col1:
+            st.session_state.age = st.number_input("הכנס את גילך:", min_value=3, max_value=100, value=st.session_state.age, step=1, key="age_input")
 
-    with col2:
-        st.session_state.num_words = st.number_input("מספר מילים למשחק:", min_value=5, max_value=20, value=st.session_state.num_words, step=1, key="word_count_input")
+        with col2:
+            st.session_state.num_words = st.number_input("מספר מילים למשחק:", min_value=5, max_value=20, value=st.session_state.num_words, step=1, key="word_count_input")
 
     if st.session_state.game_state in ['start', 'word_preview']:
         if st.button("צור מילים", use_container_width=True):
@@ -137,26 +154,31 @@ def main():
                             st.session_state.num_words, 
                             st.session_state.used_words
                         )
-                        # Add new words to used_words list
-                        st.session_state.used_words.extend([word['english'] for word in st.session_state.words])
+                        if not st.session_state.words:  # Check if the word list is empty
+                            raise ValueError("No words generated")
+                        
+                        # Store only the English words
+                        st.session_state.all_game_words = [word['english'] for word in st.session_state.words]
+                        st.session_state.used_words.extend(st.session_state.all_game_words)
                         st.session_state.game_state = 'word_preview'
                         st.rerun()
                     except Exception as e:
                         retry_count += 1
                         if retry_count < max_retries:
                             error_message = f"שגיאה בטעינת המילים. מנסה שוב בעוד {4 - retry_count} שניות..."
-                            with st.spinner(error_message):
-                                time.sleep(3)
+                            st.warning(error_message)
+                            time.sleep(3)
                         else:
-                            st.error("לא הצלחנו לטעון מילים. אנא נסה שוב מאוחר יותר.")
-                            break
+                            st.error("לא הצלחנו לטעון מילים. אנא נסה שוב מאוחר יותר או בחר גיל אחר.")
+                
+                if not st.session_state.words:
+                    st.error("לא הצלחנו ליצור מילים. אנא נסה שוב עם פרמטרים אחרים או מאוחר יותר.")
 
         if st.session_state.game_state == 'word_preview' and st.session_state.words:
             st.markdown("### מילים לתרגול:")
             
             # Create a colorful table with the English words
             word_html = "<table style='width:100%; border-collapse: separate;'><tr>"
-            # word_html = "<table style='width:100%; border-collapse: separate; border-spacing: 10px;'><tr>"
             colors = [generate_pastel_color() for _ in range(20)]  # Generate 20 unique pastel colors
             for i, word in enumerate(st.session_state.words):
                 color = colors[i % len(colors)]                
@@ -278,6 +300,21 @@ def main():
                 """,
                 unsafe_allow_html=True
             )
+            
+            # Check if the message has not been sent yet
+            if 'telegram_message_sent' not in st.session_state or not st.session_state.telegram_message_sent:
+                # Join the English words into a single string
+                word_list = ", ".join(st.session_state.all_game_words)
+                
+                asyncio.run(send_telegram_message(
+                    f"Final score: {st.session_state.score}, "
+                    f"Mistakes: {st.session_state.failures}, "
+                    f"The words are: {word_list}"
+                ))
+                
+                # Mark the message as sent
+                st.session_state.telegram_message_sent = True
+
             if st.button("שחק שוב", use_container_width=True):
                 start_over()
                 st.rerun()
@@ -290,6 +327,14 @@ def main():
     if st.session_state.game_state == 'play' and st.session_state.timer_active:
         time.sleep(1)
         st.rerun()
+
+
+async def send_telegram_message(txt):
+    sender = st.session_state.telegram_sender
+    try:
+        await sender.send_message(txt, "LinguKid")
+    finally:
+        await sender.close_session()
 
 if __name__ == "__main__":
     main()
