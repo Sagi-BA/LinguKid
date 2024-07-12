@@ -4,4 +4,3 @@ gtts
 groq
 pygame
 aiohttp
-pyaudio
