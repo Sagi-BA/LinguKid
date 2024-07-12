@@ -6,7 +6,6 @@ import json
 from gtts import gTTS
 from io import BytesIO
 import base64
-import pygame
 
 from utils.init import initialize
 from utils.counter import initialize_user_count, increment_user_count, decrement_user_count, get_user_count
@@ -65,20 +64,30 @@ if 'counted' not in st.session_state:
 # Initialize user count
 initialize_user_count()
 
-def play_sound(sound):
-    sound.play()
-    # Wait for the sound to finish playing
-    pygame.time.wait(int(sound.get_length() * 1000))
+def play_sound(file_path: str):
+    with open(file_path, "rb") as f:
+        data = f.read()
+        b64 = base64.b64encode(data).decode()
+        md = f"""
+            <audio autoplay style="display:none;">
+            <source src="data:audio/mp3;base64,{b64}" type="audio/mp3">
+            </audio>
+            <script>
+            var audio = document.getElementsByTagName("audio")[0];
+            audio.play();
+            </script>
+            """
+        st.markdown(md, unsafe_allow_html=True)
     
 def main():
     header_content, image_path, footer_content = initialize()    
 
     # Initialize pygame mixer
-    pygame.mixer.init()
+    # pygame.mixer.init()
 
     # Load sound effects
-    correct_sound = pygame.mixer.Sound("sounds/correct.mp3")
-    incorrect_sound = pygame.mixer.Sound("sounds/incorrect.mp3")
+    correct_sound = "sounds/correct.mp3"
+    incorrect_sound = "sounds/incorrect.mp3"
 
     # Initialize session state variables
     if 'age' not in st.session_state:
@@ -255,12 +264,14 @@ def main():
                                 st.session_state.score += 1
                                 st.success("נכון!")
                                 play_sound(correct_sound)
+                                time.sleep(2)
                                 st.session_state.current_word = None
                                 st.rerun()
                             else:
                                 st.session_state.failures += 1
                                 st.error(f"לא נכון. לחץ על התשובה הנכונה כדי להמשיך.")
                                 play_sound(incorrect_sound)
+                                time.sleep(1)
                                 st.session_state.timer_active = False
                                 st.session_state.waiting_for_next = True
                                 st.rerun()
