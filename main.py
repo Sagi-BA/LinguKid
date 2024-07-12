@@ -2,11 +2,9 @@ import asyncio
 import streamlit as st
 import random
 import time
-import json
+import base64
 from gtts import gTTS
 from io import BytesIO
-import base64
-import pygame
 
 from utils.init import initialize
 from utils.counter import initialize_user_count, increment_user_count, decrement_user_count, get_user_count
@@ -73,14 +71,30 @@ def get_base64_audio(file_path):
         return base64.b64encode(audio_file.read()).decode('utf-8')
 
 
-def play_sound(sound_file):
-    audio_base64 = get_base64_audio(sound_file)
-    audio_html = f"""
-        <audio autoplay>
-            <source src="data:audio/mpeg;base64,{audio_base64}" type="audio/mpeg">
-        </audio>
-    """
-    st.markdown(audio_html, unsafe_allow_html=True)
+def load_audio_files():
+    correct_audio = get_base64_audio("sounds/correct.mp3")
+    incorrect_audio = get_base64_audio("sounds/incorrect.mp3")
+    
+    st.markdown(
+        f"""
+        <script>
+        var correctAudio = new Audio("data:audio/mp3;base64,{correct_audio}");
+        var incorrectAudio = new Audio("data:audio/mp3;base64,{incorrect_audio}");
+        
+        function playSound(sound) {{
+            if (sound === 'correct') {{
+                correctAudio.play();
+            }} else if (sound === 'incorrect') {{
+                incorrectAudio.play();
+            }}
+        }}
+        </script>
+        """,
+        unsafe_allow_html=True
+    )
+
+def play_sound(sound):
+    st.markdown(f'<script>playSound("{sound}");</script>', unsafe_allow_html=True)
     
 def main():
     header_content, image_path, footer_content = initialize()    
@@ -271,15 +285,17 @@ def main():
                             if option == st.session_state.current_word['hebrew']:
                                 st.session_state.score += 1
                                 st.success("נכון!")
-                                play_sound(correct_sound_file)
+                                play_sound('correct')
                                 st.session_state.current_word = None
+                                time.sleep(0.5)  # Short delay to allow sound to play
                                 st.rerun()
                             else:
                                 st.session_state.failures += 1
                                 st.error(f"לא נכון. לחץ על התשובה הנכונה כדי להמשיך.")
-                                play_sound(incorrect_sound_file)
+                                play_sound('incorrect')
                                 st.session_state.timer_active = False
                                 st.session_state.waiting_for_next = True
+                                time.sleep(0.5)  # Short delay to allow sound to play
                                 st.rerun()
                         else:
                             st.session_state.current_word = None
