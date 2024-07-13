@@ -31,7 +31,7 @@ class WordGenerator:
         selected_topics_str = ", ".join(selected_topics)
 
         prompt = f"""
-        Generate a list of English words suitable for a {age}-year-old learning English.
+        Generate a list of {num_words} English words suitable for a {age}-year-old learning English.
         The difficulty level is {difficulty}. Use the random seed {random_seed} to ensure variety.
         The words should be from the following topics, one word per topic: {selected_topics_str}.
         DO NOT include the following words: {exclude_words_str}.
