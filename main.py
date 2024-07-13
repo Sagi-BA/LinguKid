@@ -1,3 +1,6 @@
+
+# ![header image](data/headerImage.jpg)
+
 import asyncio
 import streamlit as st
 import random
@@ -237,7 +240,14 @@ def main():
             st.progress(progress)
             st.write(f"זמן נותר: {int(time_left)} שניות")
 
-            st.markdown(f"<h2 style='text-align: center; color: {COLORS['text']};'>{st.session_state.current_word['english']}</h2>", unsafe_allow_html=True)
+            st.markdown(f"""
+            <div style='text-align: center;'>
+                <span style='font-size: 72px; font-weight: bold; color: {COLORS['text']}; text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);'>
+                    {st.session_state.current_word['english']}
+                </span>
+            </div>
+            """, unsafe_allow_html=True)
+            
             audio_file = text_to_speech(st.session_state.current_word['english'])
             st.audio(audio_file, format='audio/mp3')
             
