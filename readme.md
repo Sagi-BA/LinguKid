@@ -19,7 +19,7 @@ Lingukid is an interactive English learning app designed for children
 
 ## Watch the video tutorial
 
-![header image](https://i.imgur.com/GJGEDkz.jpg)
+![header image](https://i.imgur.com/mhAgJqZ.jpeg)
 
 ## How it works
 

@@ -11,15 +11,30 @@ load_dotenv()
 class WordGenerator:
     def __init__(self):
         self.client = Groq(api_key=os.getenv("GROQ_API_KEY"))
+        self.topics = self.load_topics()
 
+    def load_topics(self):
+        file_path = os.path.join('data', 'topics.json')
+        with open(file_path, 'r') as file:        
+            topics_data = json.load(file)
+            topics = topics_data.get('topics', [])
+            random.shuffle(topics)  # Shuffle the topics randomly
+            return topics
+        
     def generate_words(self, age, difficulty, num_words=10, exclude_words=[]):
         # Add randomness to the prompt
         random_seed = random.randint(1, 1000000)
         exclude_words_str = ", ".join(exclude_words)
+
+        # Select random topics
+        selected_topics = random.sample(self.topics, min(len(self.topics), 5))  # Select up to 5 topics randomly
+        selected_topics_str = ", ".join(selected_topics)
+
         prompt = f"""
-        Generate a list of {num_words} English words suitable for a {age}-year-old learning English. 
+        Generate a list of {num_words} English words suitable for a {age}-year-old learning English.
         The difficulty level is {difficulty}. Use the random seed {random_seed} to ensure variety.
-        DO NOT include the following words: {exclude_words_str}
+        The words should be from the following topics: {selected_topics_str}.
+        DO NOT include the following words: {exclude_words_str}.
         For each word, provide:
         1. The English word
         2. Its ACCURATE Hebrew translation
@@ -71,6 +86,11 @@ class WordGenerator:
                     options = word['options'] + [word['hebrew']]
                     random.shuffle(options)
                     word['options'] = options
+                
+                 # Print the words in English as a comma-separated list
+                english_words = [word['english'] for word in words]
+                print(", ".join(english_words))
+
                 return words
             except json.JSONDecodeError:
                 print("Error: Invalid JSON format in the extracted array")
@@ -79,7 +99,10 @@ class WordGenerator:
             print("Error: No JSON array found in the response")
             return []
 
-# Example usage:
-# generator = WordGenerator()
-# words = generator.generate_words(8, "medium", 5, ["Dog", "Cat"])
-# print(json.dumps(words, indent=2, ensure_allow_unicode=True))
+if __name__ == "__main__":
+    # Example usage:
+    generator = WordGenerator()
+    words = generator.generate_words(8, "medium", 5, ["Dog", "Cat"])
+    # print(json.dumps(words, indent=2, ensure_ascii=False))
+
+    
