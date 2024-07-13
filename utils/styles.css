@@ -20,6 +20,24 @@ body {
   font-size: 24px;
 }
 
+.image-container {
+  position: relative;
+  width: 200px;
+  height: 200px;
+  margin: 0 auto;
+}
+
+.circular-image {
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.half-hidden {
+  clip-path: inset(0 0 50% 0);
+}
+
 .stApp > header,
 .stApp > footer {
   background-color: var(--header-footer-bg);
