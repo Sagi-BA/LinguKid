@@ -242,7 +242,7 @@ def main():
 
             st.markdown(f"""
             <div style='text-align: center;'>
-                <span style='font-size: 72px; font-weight: bold; color: {COLORS['text']}; text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);'>
+                <span class='word-animation'>
                     {st.session_state.current_word['english']}
                 </span>
             </div>
@@ -289,9 +289,9 @@ def main():
 
             st.markdown(
                 f"""
-                <div style='display: flex; justify-content: space-between;'>
-                    <div style='color: {COLORS["correct"]};'>ניקוד: {st.session_state.score}</div>
-                    <div style='color: {COLORS["incorrect"]};'>טעויות: {st.session_state.failures}</div>
+                <div class='score-container'>
+                    <div class='score correct'>ניקוד: {st.session_state.score}</div>
+                    <div class='score incorrect'>טעויות: {st.session_state.failures}</div>
                 </div>
                 """,
                 unsafe_allow_html=True
@@ -303,8 +303,8 @@ def main():
             st.markdown(f"<h2 style='text-align: center; color: {COLORS['title']};'>המשחק הסתיים!</h2>", unsafe_allow_html=True)
             st.markdown(
                 f"""
-                <div style='text-align: center; font-size: 24px;'>
-                    <div style='color: {COLORS["correct"]};'>ניקוד סופי: {st.session_state.score}</div>
+                <div class='final-score'>
+                    <div style='color: {COLORS['correct']};'>ניקוד סופי: {st.session_state.score}</div>
                     <div style='color: {COLORS["incorrect"]};'>טעויות: {st.session_state.failures}</div>
                 </div>
                 """,
