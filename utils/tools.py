@@ -1,5 +1,10 @@
 import os
 from io import BytesIO
+import requests
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 def save_uploaded_file(uploaded_file, upload_dir="uploads", filename=None):
     """
@@ -22,3 +27,16 @@ def save_uploaded_file(uploaded_file, upload_dir="uploads", filename=None):
     
     return file_path
 
+def get_image_url(query):
+    UNSPLASH_ACCESS_KEY = os.getenv("UNSPLASH_ACCESS_KEY")
+
+    url = f"https://api.unsplash.com/search/photos?query={query}&client_id={UNSPLASH_ACCESS_KEY}"
+    response = requests.get(url)
+    data = response.json()
+    if data['results']:
+        return data['results'][0]['urls']['regular']
+    return None
+
+if __name__ == "__main__":
+    image_url = get_image_url("Mountain")
+    print(image_url)

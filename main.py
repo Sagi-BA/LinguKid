@@ -1,6 +1,5 @@
 
 # ![header image](data/headerImage.jpg)
-
 import asyncio
 import streamlit as st
 import random
@@ -14,6 +13,7 @@ from utils.init import initialize
 from utils.counter import initialize_user_count, increment_user_count, decrement_user_count, get_user_count
 from utils.word_generator import WordGenerator
 from utils.TelegramSender import TelegramSender
+from utils.tools import get_image_url
 
 # צבעים מותאמים לילדים
 COLORS = {
@@ -247,6 +247,17 @@ def main():
                 </span>
             </div>
             """, unsafe_allow_html=True)
+
+            # Display image from Unsplash
+            image_url = get_image_url(st.session_state.current_word['english'])
+            if image_url:
+                st.markdown(f"""
+                <div style='text-align: center;'>
+                    <img src='{image_url}' alt='{st.session_state.current_word['english']}' style='width: 200px; height: 200px; border-radius: 50%; object-fit: cover; margin-top: 10px;'/>
+                </div>
+                """, unsafe_allow_html=True)
+
+
             
             audio_file = text_to_speech(st.session_state.current_word['english'])
             st.audio(audio_file, format='audio/mp3')
@@ -322,6 +333,7 @@ def main():
 
             if st.button("שחק שוב", use_container_width=True):
                 start_over()
+                st.session_state.game_state = 'start'  # Change game state after sending the message
                 st.rerun()
 
     user_count = get_user_count(formatted=True)
