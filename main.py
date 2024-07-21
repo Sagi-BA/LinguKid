@@ -1,4 +1,3 @@
-
 # ![header image](data/headerImage.jpg)
 import asyncio
 import streamlit as st
@@ -83,7 +82,7 @@ def play_sound(file_path: str):
         st.markdown(md, unsafe_allow_html=True)
     
 def main():
-    header_content, image_path, footer_content = initialize()    
+    image_path, footer_content = initialize()    
 
     # Load sound effects
     correct_sound = "sounds/correct.mp3"
@@ -131,12 +130,11 @@ def main():
         }}
     </style>
     """, unsafe_allow_html=True)
-
-    # st.title("LinguaKid", anchor=False)
-    st.markdown(f"<h2 style='text-align: center; color: {COLORS['title']};'>{header_content}</h2>", unsafe_allow_html=True)
     
     if image_path:
-        st.image(image_path, use_column_width=True)
+        col1, col2, col3 = st.columns([1, 2, 1])
+        with col2:
+            st.image(image_path, use_column_width=True)
 
     if st.session_state.game_state in ['start', 'word_preview']:
         col1, col2 = st.columns(2)

@@ -3,18 +3,6 @@ from streamlit.components.v1 import html
 import os
 
 def initialize():
-    st.set_page_config(layout="wide", page_title="לינגוקיד היא אפליקציית למידת אנגלית אינטראקטיבית המיועדת לילדים", page_icon="🧒")
-    
-    # Load external CSS
-    css_file_path = os.path.join('utils', 'styles.css')
-    with open(css_file_path, 'r') as f:
-        st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
-
-    # # Load external JavaScript
-    # js_file_path = os.path.join('utils', 'script.js')
-    # with open(js_file_path, 'r') as f:
-    #     st.markdown(f'<script>{f.read()}</script>', unsafe_allow_html=True)
-
     # Load header content
     header_file_path = os.path.join('utils', 'header.md')
     try:
@@ -24,7 +12,7 @@ def initialize():
         st.error("header.md file not found in utils folder.")
         header_content = ""  # Provide a default empty header
 
-    # Extract title and image path from header content
+     # Extract title and image path from header content
     header_lines = header_content.split('\n')
     title = header_lines[0].strip('# ')
     image_path = None    
@@ -33,6 +21,14 @@ def initialize():
             image_path = line.split('(')[1].split(')')[0]
             break
     
+    st.set_page_config(layout="wide", page_title=f"{title}", page_icon="🧒")
+    st.title(f"{title}")
+    
+    # Load external CSS
+    css_file_path = os.path.join('utils', 'styles.css')
+    with open(css_file_path, 'r') as f:
+        st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
+
     # Load footer content
     footer_file_path = os.path.join('utils', 'footer.md')
     try:
@@ -40,6 +36,17 @@ def initialize():
             footer_content = footer_file.read()
     except FileNotFoundError:
         st.error("footer.md file not found in utils folder.")
-        footer_content = ""  # Provide a default empty footer
+        footer_content = ""  # Provide a default empty footer   
 
-    return title, image_path, footer_content
+    with st.expander('אודות האפליקציה - נוצרה ע"י שגיא בר און'):
+        st.markdown('''
+        אפליקציית Streamlit זו מבוססת מודל שפה AI המייצר מילים רנדומאלי ומבצע בדיקות למתן ניקוד.
+        
+        - האפליקציה מציגה מילים באנגלית ומבקשת מהמשתמשים לבחור את התרגום הנכון בעברית. 
+        - היא כוללת רמות קושי שונות, משוב מיידי ומערכת ניקוד. 
+        - המשחק כולל אפקטי קול לשיפור ההגייה, כמו גם אנימציות מהנות כמו קונפטי לסיום מוצלח. 
+        - האפליקציה מותאמת לגיל המשתמש.
+        ''')
+
+    return image_path, footer_content
+    
