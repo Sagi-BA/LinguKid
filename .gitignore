@@ -6,3 +6,4 @@ sample_songs
 # Ignore all __pycache__ directories
 **/__pycache__/
 AI.txt
+data/user_count.json

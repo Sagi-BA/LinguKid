@@ -38,5 +38,5 @@ def get_image_url(query):
     return None
 
 if __name__ == "__main__":
-    image_url = get_image_url("Mountain")
+    image_url = get_image_url("A futuristic city with twisted glass and chrome skyscrapers, floating bridges, and flying cars between buildings glowing in neon colors")
     print(image_url)
